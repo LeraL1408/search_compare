@@ -60,6 +60,8 @@ Add `--train-size`, `--validation-size`, `--test-size` and `--split-seed` as nee
 
 ### Use your existing Codex login
 
+For the prepared all-benchmark short run, use `configs/codex-all-short.json`. It adds a shared `budgets.global` ledger, per-benchmark budget slices, one validation and one held-out user task per benchmark, and skips redundant validation of the predefined baseline. All methods and phases count toward the global 500,000-token threshold. Live cumulative accounting is in `total_budget.json`; finalized totals are also in the manifest. Codex's final usage is known only after a turn; the gateway leaves a conservative request reserve before launching near the global limit. `New candidates` in reports distinguishes validated generated designs from initial archive agents.
+
 The **Codex CLI backend is implemented**, including structured responses and benchmark-tool relay. It uses your saved ChatGPT login, with no API key. See [the short Russian guide](START_CODEX.ru.md).
 
 This workspace already has `configs/codex.json`, using the model selected in your local Codex settings. To create a configuration on another machine:

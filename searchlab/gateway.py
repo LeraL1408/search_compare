@@ -6,7 +6,7 @@ import re
 import time
 from dataclasses import dataclass, field
 
-from .common import AFLOW_BASELINE, BASELINE, append
+from .common import AFLOW_BASELINE, BASELINE, append, save
 
 
 class BudgetStop(BaseException):
@@ -29,11 +29,34 @@ class Ledger:
     failures: int = 0
     codex_runs: int = 0
     started: float = field(default_factory=time.monotonic)
+    parent: Ledger | None = None
 
     def check(self, tokens=0, usd=0):
+        if self.parent:
+            self.parent.check(tokens, usd)
+        if self.parent is None and not self.token_usage_complete:
+            raise BudgetStop("Total token usage is incomplete; stopping further calls")
         for key, value in (("max_calls", self.calls + 1), ("max_tokens", self.tokens + tokens), ("max_usd", self.usd + usd), ("max_seconds", time.monotonic() - self.started)):
             if self.limits[key] is not None and value > self.limits[key]:
                 raise BudgetStop(f"Reached {key}")
+
+    def ancestors(self):
+        node = self.parent
+        while node:
+            yield node
+            node = node.parent
+
+    def counters(self):
+        return {key: getattr(self, key) for key in ("calls", "tokens", "usd", "input_tokens", "output_tokens", "cached_input_tokens", "failures", "codex_runs")}
+
+    def propagate(self, before):
+        for parent in self.ancestors():
+            for key, value in self.counters().items():
+                setattr(parent, key, getattr(parent, key) + value - before[key])
+            parent.cost_available &= self.cost_available
+            parent.token_usage_complete &= self.token_usage_complete
+            parent.uncertain |= self.uncertain
+            save(parent.path, parent.snapshot())
 
     def snapshot(self):
         return {"calls": self.calls, "tokens": self.tokens, "usd": self.usd if self.cost_available else None,
@@ -51,8 +74,29 @@ class Gateway:
         self.clients = {}
         if not fixture and any(m.get("provider") == "codex" for m in models.values()):
             self.ledger.cost_available = False
+            for parent in self.ledger.ancestors():
+                parent.cost_available = False
 
     def call(self, messages, role="execution", temperature=0, tools=None, fields=None):
+        self.ledger.check()
+        # Codex reports complete usage only after a turn. Leave a conservative
+        # payload-byte + runtime/output reserve before launching near the total
+        # cap; the provider still has no server-enforced output-token ceiling.
+        ancestors = list(self.ledger.ancestors())
+        if ancestors and not self.fixture and self.models[role].get("provider") == "codex":
+            reserve = len(json.dumps({"messages": messages, "tools": tools}, ensure_ascii=False).encode()) + 16000
+            ancestors[-1].check(tokens=reserve)
+        before = self.ledger.counters()
+        try:
+            result = self._call(messages, role, temperature, tools, fields)
+        finally:
+            self.ledger.propagate(before)
+        for parent in ancestors:
+            if parent.tokens > parent.limits["max_tokens"]:
+                raise BudgetStop("Shared token budget reached by the last Codex invocation")
+        return result
+
+    def _call(self, messages, role="execution", temperature=0, tools=None, fields=None):
         config = self.models[role]
         if not self.fixture and config.get("provider") == "codex":
             return self._call_codex(messages, role, temperature, tools, fields)
@@ -124,6 +168,8 @@ class Gateway:
         started = time.monotonic()
         event_path = self.ledger.path.parent / "codex_events" / f"{self.ledger.path.stem}-{self.ledger.calls:05}.jsonl"
         remaining = self.ledger.limits["max_seconds"] - (started - self.ledger.started)
+        for parent in self.ledger.ancestors():
+            remaining = min(remaining, parent.limits["max_seconds"] - (started - parent.started))
         def started_process():
             self.ledger.codex_runs += 1
         try:

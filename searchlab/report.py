@@ -64,6 +64,8 @@ def report(directory):
                      "test_status": row["test"]["status"], "check_score" if manifest["fixture"] else "test_score": test.get("score"),
                      "search_status": row["search"]["status"], "search_usd": row["search"]["budget"]["usd"],
                      "search_calls": row["search"]["budget"]["calls"],
+                     "completed_generated_candidates": row["search"].get("completed_generated_candidates"),
+                     "selected_origin": row.get("selected_origin"),
                      "search_tokens": row["search"]["budget"].get("tokens"),
                      "search_token_usage_complete": row["search"]["budget"].get("token_usage_complete", True),
                      "search_input_tokens": row["search"]["budget"].get("input_tokens"),
@@ -94,10 +96,14 @@ def report(directory):
     title = "OFFLINE FIXTURE CHECK — NOT BENCHMARK RESULTS" if manifest["fixture"] else "AFlow and ADAS benchmark comparison"
     text = [f"# {title}", "", "Scores are per benchmark, mean ± sample standard deviation across seeds. Higher is better; attack success is lower-is-better.",
             "Incomplete test runs have no score. Search costs include proposal, initial archive, debugging and candidate evaluation.",
-            "", "| Benchmark | Method | Complete seeds | Test score | Search USD | Test USD/task | Errors |", "|---|---|---:|---:|---:|---:|---:|"]
+            "", "| Benchmark | Method | Complete seeds | Test score | New candidates | Search USD | Test USD/task | Errors |", "|---|---|---:|---:|---:|---:|---:|---:|"]
+    if manifest.get("total_budget"):
+        total = manifest["total_budget"]
+        text[2:2] = [f"Whole-run measured usage: {total['tokens']:,} tokens / {total['limits']['max_tokens']:,} configured limit; {total['calls']} gateway calls; {total['seconds']:.1f} seconds. Token usage complete: {total['token_usage_complete']}.", ""]
     for (benchmark, method), rows in sorted(groups.items()):
         complete = [r for r in rows if r["test"]["status"] == "complete"]
         text.append(f"| {benchmark} | {method} | {len(complete)}/{len(rows)} | {stats([r['test']['result']['score'] for r in complete])} | "
+                    f"{sum(r['search'].get('completed_generated_candidates', 0) for r in rows) if all('completed_generated_candidates' in r['search'] for r in rows) else 'unknown'} | "
                     f"{stats([r['search']['budget']['usd'] for r in rows], 6)} | "
                     f"{stats([r['test']['result']['usd']/r['test']['result']['count'] if r['test']['result']['usd'] is not None else None for r in complete], 6)} | "
                     f"{sum(r['test']['result']['errors'] for r in complete)} |")
@@ -119,6 +125,7 @@ def report(directory):
         delta = [r["test"]["result"]["score"] - b["test"]["result"]["score"] for r, b in pairs]
         text.append(f"- {benchmark}, {method}: {stats(delta)} ({len(delta)} paired seeds).")
     text.extend(["", "## Run status", ""])
+    text.append("New candidates counts only generated agents with a complete validation evaluation. Zero means the run did not validate a new design; its selected agent can come from the initial archive. Such a run does not demonstrate improvement from automated search.")
     for row in results:
         if row["search"]["status"] != "complete" or row["test"]["status"] != "complete":
             text.append(f"- {row['benchmark']}/{row['method']}/seed {row['seed']}: search {row['search']['status']} ({row['search']['error']}), test {row['test']['status']}.")

@@ -90,9 +90,10 @@ def main():
                 print(json.dumps({"fixture": config["fixture"], "seeds": config["seeds"],
                     "benchmarks": [{"name": b["name"], "sizes": {s: len(b[s]) for s in ("train", "validation", "test")}} for b in bundles],
                     "methods": ["baseline", "aflow", "adas"], "budgets": config["budgets"],
+                    "benchmark_budgets": config.get("benchmark_budgets", {}),
                     "backend": config["models"]["execution"].get("provider", "openai"),
                     "maximum_configured_total_usd": None if config["budgets"]["search"]["max_usd"] is None else n * (2 * config["budgets"]["search"]["max_usd"] + 4 * config["budgets"]["evaluation"]["max_usd"]),
-                    "maximum_gateway_calls": n * (2 * config["budgets"]["search"]["max_calls"] + 4 * config["budgets"]["evaluation"]["max_calls"])}, indent=2))
+                    "maximum_gateway_calls": min(n * (2 * config["budgets"]["search"]["max_calls"] + 4 * config["budgets"]["evaluation"]["max_calls"]), config["budgets"].get("global", {}).get("max_calls", float("inf")))}, indent=2))
             else:
                 directory = run(config, args.output, args.live)
                 print(directory)

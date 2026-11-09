@@ -79,11 +79,11 @@ do not repeat side effects when trying alternative answers. The evaluator and hi
 answers are unavailable. Final test tasks are unavailable during search.
 """
 
-    def evaluate(self, candidate, label):
+    def evaluate(self, candidate, label, origin="unspecified"):
         result = self.evaluator.evaluate(candidate, label)
         identifier = digest(candidate)
         save(self.directory / "candidates" / f"{identifier}.json", candidate)
-        entry = {"candidate": candidate, "result": result, "label": label,
+        entry = {"candidate": candidate, "result": result, "label": label, "origin": origin,
                  "budget": self.gateway.ledger.snapshot()}
         self.history.append(entry)
         if self.best is None or result["score"] > self.best["result"]["score"]:
@@ -142,7 +142,7 @@ def run_aflow(context, seed):
         async def graph_evaluate(self, dataset, graph, params, path, is_test=False):
             if is_test:
                 raise ValueError("Upstream search cannot access final test tasks")
-            result = context.evaluate(graph, Path(path).name)
+            result = context.evaluate(graph, Path(path).name, origin="initial" if Path(path).name == "round_1" else "generated")
             failures = [{"task_id": record["task_id"], "model_output": record.get("output"),
                          "score": record["score"], "error": record["error"],
                          "expected_answers": task.get("answers", [])}
@@ -208,6 +208,7 @@ def run_adas(context, seed):
     np.random.seed(seed)
     base = ROOT / "vendor/adas/_drop"
     prompts = load_module("adas_original_prompt", base / "drop_prompt.py")
+    initial_codes = {solution["code"] for solution in prompts.get_init_archive()}
     metrics = load_module("adas_original_utils", base / "utils.py")
     # Keep archive instructions, seed architectures and both reflection prompts;
     # replace only the original DROP domain/example introduction.
@@ -228,7 +229,7 @@ def run_adas(context, seed):
 
     def evaluate(args, code):
         candidate = {"kind": "adas", "code": code, "prompt": "", "name": "ADAS " + digest(code)[:10]}
-        return context.evaluate(candidate, candidate["name"])["scores"]
+        return context.evaluate(candidate, candidate["name"], origin="initial" if code in initial_codes else "generated")["scores"]
 
     ns = {"os": os, "json": json, "np": np, "get_init_archive": prompts.get_init_archive,
           "get_prompt": get_prompt, "get_reflexion_prompt": prompts.get_reflexion_prompt,

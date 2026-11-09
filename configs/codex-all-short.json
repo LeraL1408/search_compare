@@ -1,0 +1,120 @@
+{
+  "fixture": false,
+  "seeds": [
+    11
+  ],
+  "datasets": [
+    "data/codex-all-short/gsm8k-15905d704444.json",
+    "data/codex-all-short/drop-5d41b9188093.json",
+    "data/codex-all-short/mbpp-4c42c6ee842f.json",
+    "data/codex-all-short/agentdojo_workspace-77b4078c551a.json"
+  ],
+  "models": {
+    "search": {
+      "provider": "codex",
+      "binary": "codex",
+      "model": "gpt-5.6-terra",
+      "reasoning_effort": "low",
+      "timeout_seconds": 120,
+      "max_prompt_bytes": 200000,
+      "input_usd_per_million": null,
+      "output_usd_per_million": null
+    },
+    "execution": {
+      "provider": "codex",
+      "binary": "codex",
+      "model": "gpt-5.6-terra",
+      "reasoning_effort": "low",
+      "timeout_seconds": 120,
+      "max_prompt_bytes": 200000,
+      "input_usd_per_million": null,
+      "output_usd_per_million": null
+    }
+  },
+  "budgets": {
+    "search": {
+      "max_calls": 12,
+      "max_tokens": 20000,
+      "max_usd": null,
+      "max_seconds": 300
+    },
+    "evaluation": {
+      "max_calls": 16,
+      "max_tokens": 100000,
+      "max_usd": null,
+      "max_seconds": 300
+    },
+    "global": {
+      "max_calls": 80,
+      "max_tokens": 500000,
+      "max_usd": null,
+      "max_seconds": 2400
+    }
+  },
+  "search": {
+    "iterations": 1,
+    "aflow_sample": 4,
+    "adas_debug_max": 3
+  },
+  "evaluation": {
+    "max_model_calls_per_task": 4,
+    "max_tool_steps": 6,
+    "agentdojo_version": "v1.2.2",
+    "agentdojo_attack": "ignore_previous",
+    "agentdojo_injection_tasks": [
+      "injection_task_0"
+    ],
+    "agentdojo_objective": "robust_utility"
+  },
+  "execution": {
+    "docker_image": "python:3.12-slim",
+    "task_timeout_seconds": 180
+  },
+  "baseline_validation": false,
+  "benchmark_budgets": {
+    "gsm8k": {
+      "total": {
+        "max_calls": 20,
+        "max_tokens": 80000,
+        "max_usd": null,
+        "max_seconds": 600
+      }
+    },
+    "drop": {
+      "total": {
+        "max_calls": 20,
+        "max_tokens": 80000,
+        "max_usd": null,
+        "max_seconds": 600
+      }
+    },
+    "mbpp": {
+      "total": {
+        "max_calls": 20,
+        "max_tokens": 80000,
+        "max_usd": null,
+        "max_seconds": 600
+      }
+    },
+    "agentdojo_workspace": {
+      "total": {
+        "max_calls": 40,
+        "max_tokens": 250000,
+        "max_usd": null,
+        "max_seconds": 1200
+      },
+      "search": {
+        "max_calls": 16,
+        "max_tokens": 50000,
+        "max_usd": null,
+        "max_seconds": 400
+      },
+      "evaluation": {
+        "max_calls": 16,
+        "max_tokens": 100000,
+        "max_usd": null,
+        "max_seconds": 400
+      }
+    }
+  }
+}

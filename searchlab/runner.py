@@ -50,8 +50,12 @@ def load_config(path):
             for limit in ("max_input_tokens", "max_output_tokens"):
                 if type(model[limit]) is not int or model[limit] <= 0:
                     raise ValueError(f"Invalid {role}.{limit}")
-    for phase in ("search", "evaluation"):
-        limits = config["budgets"][phase]
+    limit_sets = [(phase, config["budgets"][phase]) for phase in ("search", "evaluation")]
+    if "global" in config["budgets"]:
+        limit_sets.append(("global", config["budgets"]["global"]))
+    for benchmark, budgets in config.get("benchmark_budgets", {}).items():
+        limit_sets.extend((benchmark + "." + phase, limits) for phase, limits in budgets.items())
+    for phase, limits in limit_sets:
         for key in ("max_calls", "max_tokens", "max_seconds", "max_usd"):
             value = limits[key]
             if key == "max_usd" and codex:
@@ -153,11 +157,20 @@ def run(config, output=None, live=False):
                              "token_budget_enforcement": "between_codex_runs", "usd_cost_available": False,
                              "seed_applied": False, "temperature_applied": False}
     save(directory / "manifest.json", manifest)
+    total_ledger = Ledger(config["budgets"]["global"], directory / "total_budget.json") if "global" in config["budgets"] else None
+    if total_ledger:
+        total_ledger.cost_available = not any(m.get("provider") == "codex" for m in config["models"].values())
+        save(total_ledger.path, total_ledger.snapshot())
     all_results = []
     execution = {**config["execution"], **({"docker_image": image_id} if image_id else {})}
     worker = Worker(execution, fixture=config["fixture"])
     for original in bundles:
         bundle = expand_agentdojo(original, config["evaluation"])
+        overrides = config.get("benchmark_budgets", {}).get(bundle["name"], {})
+        benchmark_ledger = Ledger(overrides["total"], directory / bundle["name"] / "budget.json", parent=total_ledger) if "total" in overrides else total_ledger
+        if benchmark_ledger and total_ledger:
+            benchmark_ledger.cost_available = total_ledger.cost_available
+            save(benchmark_ledger.path, benchmark_ledger.snapshot())
         save(directory / bundle["name"] / "splits.json", bundle)
         eval_config = {**config["evaluation"], "answer_instruction": {
             "gsm8k": "For mathematics, return only the final numeric answer.",
@@ -173,14 +186,20 @@ def run(config, output=None, live=False):
                 unit = directory / bundle["name"] / f"seed_{seed}" / method
                 unit.mkdir(parents=True)
                 print(f"{bundle['name']} / seed {seed} / {method}: validation/search", flush=True)
-                ledger = Ledger(config["budgets"]["evaluation" if method == "baseline" else "search"], unit / "search_calls.jsonl")
+                phase = "evaluation" if method == "baseline" else "search"
+                ledger = Ledger(overrides.get(phase, config["budgets"][phase]), unit / "search_calls.jsonl", parent=benchmark_ledger)
                 gateway = Gateway(config["models"], ledger, seed, config["fixture"])
                 evaluator = Evaluator(bundle["name"], bundle["validation"], gateway, worker, eval_config, unit, "validation")
                 context = SearchContext(evaluator, gateway, unit, bundle["train"], config["search"])
                 status, error = "complete", None
                 try:
                     if method == "baseline":
-                        context.evaluate(BASELINE, "baseline")
+                        if config.get("baseline_validation", True):
+                            context.evaluate(BASELINE, "baseline", origin="baseline")
+                        else:
+                            # A fixed baseline needs no validation-based
+                            # selection. Evaluate it on held-out tasks below.
+                            context.best = {"candidate": BASELINE, "result": {"score": None, "status": "not_applicable", "count": 0}}
                     else:
                         (run_aflow if method == "aflow" else run_adas)(context, seed)
                 except BudgetStop as exc:
@@ -188,15 +207,17 @@ def run(config, output=None, live=False):
                 except Exception as exc:
                     status, error = "failed", type(exc).__name__ + ": " + str(exc)
                 search_result = {"status": status, "error": error, "budget": ledger.snapshot(),
-                                 "completed_candidates": len(context.history)}
+                                 "completed_candidates": len(context.history),
+                                 "completed_generated_candidates": sum(h.get("origin") == "generated" for h in context.history)}
                 summary = {"benchmark": bundle["name"], "seed": seed, "method": method,
                            "fixture": config["fixture"], "search": search_result, "test": {"status": "not_run"}}
                 if context.best is not None and status != "failed":
                     artifact = {"candidate": context.best["candidate"], "sha256": digest(context.best["candidate"]),
-                                "selection": {"split": "validation", "score": context.best["result"]["score"],
+                                "selection": {"split": "predefined" if method == "baseline" and not config.get("baseline_validation", True) else "validation", "score": context.best["result"]["score"],
                                               "dataset_sha256": original["sha256"]}}
                     save(unit / "frozen.json", artifact)
                     summary["frozen_sha256"] = artifact["sha256"]
+                    summary["selected_origin"] = context.best.get("origin", "predefined")
                     summary["validation"] = context.best["result"]
                     frozen.append((unit, summary))
                 save(unit / "summary.json", summary)
@@ -209,7 +230,7 @@ def run(config, output=None, live=False):
                 if digest(artifact["candidate"]) != artifact["sha256"]:
                     raise ValueError("Frozen candidate was modified")
                 print(f"{bundle['name']} / seed {seed} / {summary['method']}: held-out test", flush=True)
-                ledger = Ledger(config["budgets"]["evaluation"], unit / "test_calls.jsonl")
+                ledger = Ledger(overrides.get("evaluation", config["budgets"]["evaluation"]), unit / "test_calls.jsonl", parent=benchmark_ledger)
                 gateway = Gateway(config["models"], ledger, seed, config["fixture"])
                 evaluator = Evaluator(bundle["name"], bundle["test"], gateway, worker, eval_config, unit, "test")
                 try:
@@ -223,6 +244,8 @@ def run(config, output=None, live=False):
                 save(unit / "summary.json", summary)
                 save(directory / "results.json", all_results)
     manifest["status"] = "complete" if all(r["test"]["status"] == "complete" for r in all_results) else "partial"
+    if total_ledger:
+        manifest["total_budget"] = total_ledger.snapshot()
     save(directory / "manifest.json", manifest)
     from .report import report
     report(directory)
