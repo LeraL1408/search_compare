@@ -1,0 +1,278 @@
+[
+  {
+    "benchmark": "gsm8k",
+    "seed": 11,
+    "method": "baseline",
+    "fixture": false,
+    "search": {
+      "status": "complete",
+      "error": null,
+      "budget": {
+        "calls": 2,
+        "tokens": 16498,
+        "usd": null,
+        "cost_uncertain": false,
+        "seconds": 11.183509542024694,
+        "cost_available": false,
+        "token_usage_complete": true,
+        "input_tokens": 16452,
+        "output_tokens": 46,
+        "cached_input_tokens": 0,
+        "failures": 0,
+        "codex_runs": 2,
+        "limits": {
+          "max_calls": 120,
+          "max_tokens": 500000,
+          "max_usd": null,
+          "max_seconds": 1800
+        }
+      },
+      "completed_candidates": 1
+    },
+    "test": {
+      "status": "complete",
+      "result": {
+        "score": 1.0,
+        "scores": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "count": 3,
+        "errors": 0,
+        "candidate_sha256": "7204cd0d78848af6c89da2cc26ed4b8dc4f525203fa3450cd7798d118f205bb5",
+        "usd": null,
+        "model_calls": 3,
+        "tokens": 24813,
+        "input_tokens": 24685,
+        "output_tokens": 128,
+        "cached_input_tokens": 11776,
+        "codex_runs": 3,
+        "seconds": 14.441931750043295
+      },
+      "budget": {
+        "calls": 3,
+        "tokens": 24813,
+        "usd": null,
+        "cost_uncertain": false,
+        "seconds": 14.443274583900347,
+        "cost_available": false,
+        "token_usage_complete": true,
+        "input_tokens": 24685,
+        "output_tokens": 128,
+        "cached_input_tokens": 11776,
+        "failures": 0,
+        "codex_runs": 3,
+        "limits": {
+          "max_calls": 120,
+          "max_tokens": 500000,
+          "max_usd": null,
+          "max_seconds": 1800
+        }
+      }
+    },
+    "frozen_sha256": "7204cd0d78848af6c89da2cc26ed4b8dc4f525203fa3450cd7798d118f205bb5",
+    "validation": {
+      "score": 0.5,
+      "scores": [
+        1.0,
+        0.0
+      ],
+      "count": 2,
+      "errors": 0,
+      "candidate_sha256": "7204cd0d78848af6c89da2cc26ed4b8dc4f525203fa3450cd7798d118f205bb5",
+      "usd": null,
+      "model_calls": 2,
+      "tokens": 16498,
+      "input_tokens": 16452,
+      "output_tokens": 46,
+      "cached_input_tokens": 0,
+      "codex_runs": 2,
+      "seconds": 11.181468000053428
+    }
+  },
+  {
+    "benchmark": "gsm8k",
+    "seed": 11,
+    "method": "aflow",
+    "fixture": false,
+    "search": {
+      "status": "complete",
+      "error": null,
+      "budget": {
+        "calls": 5,
+        "tokens": 43608,
+        "usd": null,
+        "cost_uncertain": false,
+        "seconds": 30.31547558296006,
+        "cost_available": false,
+        "token_usage_complete": true,
+        "input_tokens": 43236,
+        "output_tokens": 372,
+        "cached_input_tokens": 5888,
+        "failures": 0,
+        "codex_runs": 5,
+        "limits": {
+          "max_calls": 80,
+          "max_tokens": 500000,
+          "max_usd": null,
+          "max_seconds": 1200
+        }
+      },
+      "completed_candidates": 2
+    },
+    "test": {
+      "status": "complete",
+      "result": {
+        "score": 0.6666666666666666,
+        "scores": [
+          1.0,
+          1.0,
+          0.0
+        ],
+        "count": 3,
+        "errors": 0,
+        "candidate_sha256": "de80ddb146befeacb33f901aed73cbeeef3fe97ac3e8857ce0493a3dbff72d26",
+        "usd": null,
+        "model_calls": 3,
+        "tokens": 24566,
+        "input_tokens": 24509,
+        "output_tokens": 57,
+        "cached_input_tokens": 17664,
+        "codex_runs": 3,
+        "seconds": 12.468671292066574
+      },
+      "budget": {
+        "calls": 3,
+        "tokens": 24566,
+        "usd": null,
+        "cost_uncertain": false,
+        "seconds": 12.46997095795814,
+        "cost_available": false,
+        "token_usage_complete": true,
+        "input_tokens": 24509,
+        "output_tokens": 57,
+        "cached_input_tokens": 17664,
+        "failures": 0,
+        "codex_runs": 3,
+        "limits": {
+          "max_calls": 120,
+          "max_tokens": 500000,
+          "max_usd": null,
+          "max_seconds": 1800
+        }
+      }
+    },
+    "frozen_sha256": "de80ddb146befeacb33f901aed73cbeeef3fe97ac3e8857ce0493a3dbff72d26",
+    "validation": {
+      "score": 1.0,
+      "scores": [
+        1.0,
+        1.0
+      ],
+      "count": 2,
+      "errors": 0,
+      "candidate_sha256": "de80ddb146befeacb33f901aed73cbeeef3fe97ac3e8857ce0493a3dbff72d26",
+      "usd": null,
+      "model_calls": 2,
+      "tokens": 16374,
+      "input_tokens": 16336,
+      "output_tokens": 38,
+      "cached_input_tokens": 0,
+      "codex_runs": 2,
+      "seconds": 9.286129500018433
+    }
+  },
+  {
+    "benchmark": "gsm8k",
+    "seed": 11,
+    "method": "adas",
+    "fixture": false,
+    "search": {
+      "status": "budget_stopped",
+      "error": "Codex token limit exceeded by the last invocation; token caps are checked between runs",
+      "budget": {
+        "calls": 58,
+        "tokens": 507652,
+        "usd": null,
+        "cost_uncertain": false,
+        "seconds": 379.0481874590041,
+        "cost_available": false,
+        "token_usage_complete": true,
+        "input_tokens": 501985,
+        "output_tokens": 5667,
+        "cached_input_tokens": 229632,
+        "failures": 0,
+        "codex_runs": 58,
+        "limits": {
+          "max_calls": 80,
+          "max_tokens": 500000,
+          "max_usd": null,
+          "max_seconds": 1200
+        }
+      },
+      "completed_candidates": 7
+    },
+    "test": {
+      "status": "complete",
+      "result": {
+        "score": 1.0,
+        "scores": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "count": 3,
+        "errors": 0,
+        "candidate_sha256": "70d8b471bd69a28e3dcecf747760b1a4bd17926c15890c3cb773fb5f9b664b90",
+        "usd": null,
+        "model_calls": 6,
+        "tokens": 49992,
+        "input_tokens": 49668,
+        "output_tokens": 324,
+        "cached_input_tokens": 35328,
+        "codex_runs": 6,
+        "seconds": 33.048427791916765
+      },
+      "budget": {
+        "calls": 6,
+        "tokens": 49992,
+        "usd": null,
+        "cost_uncertain": false,
+        "seconds": 33.050104875001125,
+        "cost_available": false,
+        "token_usage_complete": true,
+        "input_tokens": 49668,
+        "output_tokens": 324,
+        "cached_input_tokens": 35328,
+        "failures": 0,
+        "codex_runs": 6,
+        "limits": {
+          "max_calls": 120,
+          "max_tokens": 500000,
+          "max_usd": null,
+          "max_seconds": 1800
+        }
+      }
+    },
+    "frozen_sha256": "70d8b471bd69a28e3dcecf747760b1a4bd17926c15890c3cb773fb5f9b664b90",
+    "validation": {
+      "score": 1.0,
+      "scores": [
+        1.0,
+        1.0
+      ],
+      "count": 2,
+      "errors": 0,
+      "candidate_sha256": "70d8b471bd69a28e3dcecf747760b1a4bd17926c15890c3cb773fb5f9b664b90",
+      "usd": null,
+      "model_calls": 4,
+      "tokens": 33198,
+      "input_tokens": 33034,
+      "output_tokens": 164,
+      "cached_input_tokens": 17664,
+      "codex_runs": 4,
+      "seconds": 20.257758250110783
+    }
+  }
+]

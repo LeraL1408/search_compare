@@ -1,0 +1,42 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AFlow and ADAS benchmark comparison</title>
+<style>body{font:16px system-ui;max-width:1150px;margin:40px auto;padding:0 20px;color:#172638;background:#f7f9fc}h1{font-size:28px}pre{white-space:pre-wrap;line-height:1.5}table{border-collapse:collapse;font-size:12px}td,th{padding:9px;border:1px solid #ccd4df;text-align:left}.scroll{overflow:auto}svg{max-width:720px;background:white}.notice{background:#fff1c5;padding:16px;border-radius:8px}</style>
+<h1>AFlow and ADAS benchmark comparison</h1><p class="notice">Adapted upstream methods, shared gateway and held-out task partitions. Review run status before drawing conclusions.</p>
+<pre># AFlow and ADAS benchmark comparison
+
+Scores are per benchmark, mean ± sample standard deviation across seeds. Higher is better; attack success is lower-is-better.
+Incomplete test runs have no score. Search costs include proposal, initial archive, debugging and candidate evaluation.
+
+| Benchmark | Method | Complete seeds | Test score | Search USD | Test USD/task | Errors |
+|---|---|---:|---:|---:|---:|---:|
+| gsm8k | adas | 1/1 | 1.000 ± 0.000 | unknown | unknown | 0 |
+| gsm8k | aflow | 1/1 | 0.667 ± 0.000 | unknown | unknown | 0 |
+| gsm8k | baseline | 1/1 | 1.000 ± 0.000 | unknown | unknown | 0 |
+
+## Measured usage
+
+Calls count gateway requests; with Codex, each request launches a fresh CLI session. Dollar cost for ChatGPT-authenticated Codex is unknown, not zero.
+
+| Benchmark | Method | Search calls | Search tokens | Search seconds | Test tokens/task | Test seconds/task |
+|---|---|---:|---:|---:|---:|---:|
+| gsm8k | adas | 58.0 ± 0.0 | 507652 ± 0 | 379.0 ± 0.0 | 16664.0 ± 0.0 | 11.02 ± 0.00 |
+| gsm8k | aflow | 5.0 ± 0.0 | 43608 ± 0 | 30.3 ± 0.0 | 8188.7 ± 0.0 | 4.16 ± 0.00 |
+| gsm8k | baseline | 2.0 ± 0.0 | 16498 ± 0 | 11.2 ± 0.0 | 8271.0 ± 0.0 | 4.81 ± 0.00 |
+
+## Paired improvement over baseline
+
+Use identical seeds and task splits. These differences measure improvement within a benchmark; they do not combine unlike metrics.
+
+- gsm8k, adas: 0.000 ± 0.000 (1 paired seeds).
+- gsm8k, aflow: -0.333 ± 0.000 (1 paired seeds).
+
+## Run status
+
+- gsm8k/adas/seed 11: search budget_stopped (Codex token limit exceeded by the last invocation; token caps are checked between runs), test complete.
+
+## Interpretation
+
+AFlow uses its upstream workflow-search step and tree experience. ADAS uses its upstream archive search, initial architectures and two reflection steps.
+Both use a common restricted execution interface and gateway; this is an adapted comparison, not a reproduction of the papers&#x27; original benchmark results.
+The same search caps apply to both methods; an iteration limit can stop a method before it spends its entire budget. API seeds are best effort.
+Dollar totals use the configured rates, including a conservative full-price treatment of cached input. They are estimates, not provider invoices.
+</pre><h2>gsm8k</h2><p>Best completed validation score vs. total search model calls; blue: AFlow, orange: ADAS. One line per seed.</p><svg viewBox="0 0 720 245" role="img" aria-label="Validation learning curves"><path d="M55 25 V205 H675" fill="none" stroke="#777"/><text x="20" y="35">1.0</text><text x="20" y="210">0.0</text><text x="55" y="230">0 calls</text><text x="620" y="230">50 calls</text><polyline fill="none" stroke="#2073c4" stroke-width="2" opacity="0.65" points="79.8,30.0 117.0,30.0"><title>aflow, seed 11</title></polyline><polyline fill="none" stroke="#c45520" stroke-width="2" opacity="0.65" points="79.8,117.5 228.6,117.5 278.2,30.0 451.8,30.0 501.4,30.0 625.4,30.0 675.0,30.0"><title>adas, seed 11</title></polyline></svg><h2>Every run</h2><div class="scroll"><table><thead><tr><th>benchmark</th><th>method</th><th>seed</th><th>result_kind</th><th>test_status</th><th>test_score</th><th>search_status</th><th>search_usd</th><th>search_calls</th><th>search_tokens</th><th>search_token_usage_complete</th><th>search_input_tokens</th><th>search_output_tokens</th><th>search_cached_input_tokens</th><th>search_seconds</th><th>search_codex_runs</th><th>search_failures</th><th>search_cost_uncertain</th><th>test_cost_uncertain</th><th>test_usd</th><th>test_tokens</th><th>test_token_usage_complete</th><th>test_input_tokens</th><th>test_output_tokens</th><th>test_cached_input_tokens</th><th>test_seconds</th><th>test_codex_runs</th><th>test_errors</th><th>test_count</th><th>attack_success</th><th>clean_utility</th><th>attacked_utility</th></tr></thead><tbody><tr><td>gsm8k</td><td>baseline</td><td>11</td><td>model_evaluation</td><td>complete</td><td>1.0</td><td>complete</td><td>—</td><td>2</td><td>16498</td><td>True</td><td>16452</td><td>46</td><td>0</td><td>11.183509542024694</td><td>2</td><td>0</td><td>False</td><td>False</td><td>—</td><td>24813</td><td>True</td><td>24685</td><td>128</td><td>11776</td><td>14.443274583900347</td><td>3</td><td>0</td><td>3</td><td>—</td><td>—</td><td>—</td></tr><tr><td>gsm8k</td><td>aflow</td><td>11</td><td>model_evaluation</td><td>complete</td><td>0.6666666666666666</td><td>complete</td><td>—</td><td>5</td><td>43608</td><td>True</td><td>43236</td><td>372</td><td>5888</td><td>30.31547558296006</td><td>5</td><td>0</td><td>False</td><td>False</td><td>—</td><td>24566</td><td>True</td><td>24509</td><td>57</td><td>17664</td><td>12.46997095795814</td><td>3</td><td>0</td><td>3</td><td>—</td><td>—</td><td>—</td></tr><tr><td>gsm8k</td><td>adas</td><td>11</td><td>model_evaluation</td><td>complete</td><td>1.0</td><td>budget_stopped</td><td>—</td><td>58</td><td>507652</td><td>True</td><td>501985</td><td>5667</td><td>229632</td><td>379.0481874590041</td><td>58</td><td>0</td><td>False</td><td>False</td><td>—</td><td>49992</td><td>True</td><td>49668</td><td>324</td><td>35328</td><td>33.050104875001125</td><td>6</td><td>0</td><td>3</td><td>—</td><td>—</td><td>—</td></tr></tbody></table></div></html>
