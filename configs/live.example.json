@@ -1,0 +1,16 @@
+{
+  "fixture": false,
+  "seeds": [11, 22, 33],
+  "datasets": ["data/gsm8k.json", "data/drop.json", "data/mbpp.json", "data/agentdojo_workspace.json"],
+  "models": {
+    "search": {"model": "SET_SEARCH_MODEL", "base_url": "https://api.openai.com/v1", "api_key_env": "OPENAI_API_KEY", "max_input_tokens": 150000, "max_output_tokens": 4096, "input_usd_per_million": null, "output_usd_per_million": null, "send_temperature": true, "send_seed": false, "output_limit_parameter": "max_completion_tokens", "timeout_seconds": 90},
+    "execution": {"model": "SET_EXECUTION_MODEL", "base_url": "https://api.openai.com/v1", "api_key_env": "OPENAI_API_KEY", "max_input_tokens": 150000, "max_output_tokens": 2048, "input_usd_per_million": null, "output_usd_per_million": null, "send_temperature": true, "send_seed": false, "output_limit_parameter": "max_completion_tokens", "timeout_seconds": 90}
+  },
+  "budgets": {
+    "search": {"max_calls": 2000, "max_tokens": 2000000, "max_usd": 5, "max_seconds": 3600},
+    "evaluation": {"max_calls": 1000, "max_tokens": 1000000, "max_usd": 2, "max_seconds": 1800}
+  },
+  "search": {"iterations": 20, "aflow_sample": 4, "adas_debug_max": 3},
+  "evaluation": {"max_model_calls_per_task": 20, "max_tool_steps": 20, "agentdojo_version": "v1.2.2", "agentdojo_attack": "ignore_previous", "agentdojo_injection_tasks": ["injection_task_0"], "agentdojo_objective": "robust_utility"},
+  "execution": {"docker_image": "python:3.12-slim", "task_timeout_seconds": 180}
+}
